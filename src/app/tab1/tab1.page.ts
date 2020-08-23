@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 
 import * as L from "leaflet";
+import * as LeafletOffline from 'leaflet.offline';
 import 'leaflet.BounceMarker'
 
 import "leaflet/dist/images/marker-shadow.png";
@@ -13,23 +14,34 @@ import "leaflet/dist/images/marker-icon-2x.png";
   styleUrls: ['tab1.page.scss']
 })
 export class Tab1Page {
-
   map: L.Map
+  baseLayer: L.TileLayer
+  urlTemplate = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 
   constructor() {}
+  
+  async ngOnInit() {
+    const storage = await LeafletOffline.getStorageLength();
+    console.log('storeage', storage);
 
-  ngOnInit() {
+    const getGeoJsonData = await LeafletOffline.getStorageInfo(this.urlTemplate)
+    console.log('getGeoJsonData: ', getGeoJsonData);
+
+    
     this.map = L.map('map', {
       center: [ 25.3791924,55.4765436 ],
       zoom: 15,
       renderer: L.canvas()
     })
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    this.baseLayer = L.tileLayer.offline(this.urlTemplate, {
       attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(this.map)
 
     this.addHomeMarker();
+
+    const offlineControl = this.addOfflineControls()
+    offlineControl.addTo(this.map)
     
     setTimeout(() => {
       this.map.invalidateSize();
@@ -37,7 +49,7 @@ export class Tab1Page {
   }
   
   addHomeMarker() {
-    const homeMarker = L.marker({ lat: 25.3791924, lng: 55.4765436 }, { bounceOnAdd: true });
+    const homeMarker = L.marker({ lat: 25.3791924, lng: 55.4765436 });
     homeMarker.addTo(this.map);
     homeMarker.bindPopup('This is our Home marker', {
       closeButton: true
@@ -49,6 +61,44 @@ export class Tab1Page {
       fillColor: 'steelblue',
       opacity: 0.5
     }).addTo(this.map)
+  }
+
+  showStorageInfo () {
+    LeafletOffline.getStorageInfo(this.urlTemplate).then(resp => {
+      console.log('resp: ', resp);
+    })
+  }
+
+  getGeoJsonData () {
+    return LeafletOffline.getStorageInfo(this.urlTemplate)
+    .then((data) => LeafletOffline.getStoredTilesAsJson(this.baseLayer, data));
+  }
+
+  const getGeoJsonData = () => LeafletOffline.getStorageInfo(urlTemplate)
+  .then((data) => LeafletOffline.getStoredTilesAsJson(baseLayer, data));
+
+  addOfflineControls () {
+    return L.control.savetiles(this.baseLayer, {
+      confirm(layer, succescallback) {
+        debugger
+        if (window.confirm(`Save ${layer._tilesforSave.length}`)) {
+          succescallback();
+        }
+      },
+      confirmRemoval(layer, successCallback) {
+        // eslint-disable-next-line no-alert
+        if (window.confirm('Remove all the tiles?')) {
+          successCallback();
+        }
+      },
+      saveText: '<i class="fa fa-download" aria-hidden="true" title="Save tiles"></i>',
+      rmText: '<i class="fa fa-trash" aria-hidden="true"  title="Remove tiles"></i>'
+    })
+
+  }
+
+  succescallback() {
+    debugger
   }
 
   addMarker() {
