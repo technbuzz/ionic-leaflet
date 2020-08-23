@@ -17,6 +17,7 @@ export class Tab1Page {
   map: L.Map
   baseLayer: L.TileLayer
   urlTemplate = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+  layerswitcher: L.Control.Layers;
 
   constructor() {}
   
@@ -42,6 +43,14 @@ export class Tab1Page {
 
     const offlineControl = this.addOfflineControls()
     offlineControl.addTo(this.map)
+
+    this.layerswitcher = L.control.layers({
+      'osm (offline)': this.baseLayer,
+    }, null, { collapsed: false })
+    .addTo(this.map);
+
+    this.addStorageLayer()
+
     
     setTimeout(() => {
       this.map.invalidateSize();
@@ -68,14 +77,19 @@ export class Tab1Page {
       console.log('resp: ', resp);
     })
   }
+  addStorageLayer () {
+    this.getGeoJsonData().then((geojson) => {
+      const storageLayer = L.geoJSON(geojson).bindPopup(
+        (clickedLayer) => clickedLayer.feature.properties.key,
+      );
+      this.layerswitcher.addOverlay(storageLayer, 'stored tiles');
+    });
+  };
 
   getGeoJsonData () {
     return LeafletOffline.getStorageInfo(this.urlTemplate)
     .then((data) => LeafletOffline.getStoredTilesAsJson(this.baseLayer, data));
   }
-
-  const getGeoJsonData = () => LeafletOffline.getStorageInfo(urlTemplate)
-  .then((data) => LeafletOffline.getStoredTilesAsJson(baseLayer, data));
 
   addOfflineControls () {
     return L.control.savetiles(this.baseLayer, {
