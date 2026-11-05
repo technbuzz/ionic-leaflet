@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 
 import * as L from "leaflet";
 
@@ -6,11 +6,12 @@ import * as L from "leaflet";
     selector: 'app-tab1',
     templateUrl: 'tab1.page.html',
     styleUrls: ['tab1.page.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
 export class Tab1Page {
 
-  map: L.Map
+  map!: L.Map
 
   constructor() {}
 

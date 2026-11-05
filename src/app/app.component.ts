@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 
 import { Platform } from '@ionic/angular/lazy';
 import { SplashScreen } from '@ionic-native/splash-screen/ngx';
@@ -8,6 +8,7 @@ import { StatusBar } from '@ionic-native/status-bar/ngx';
     selector: 'app-root',
     templateUrl: 'app.component.html',
     styleUrls: ['app.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
 export class AppComponent {
